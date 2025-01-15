@@ -72,4 +72,25 @@ export class DriveService {
       throw error;
     }
   }
+
+  async copyForm(formId: string, newName?: string) {
+    try {
+      Logger.log(`Creating a copy of form with ID: ${formId}`);
+      const response = await this.driveClient.files.copy({
+        fileId: formId,
+        requestBody: {
+          name: newName, // If provided, the copy will have this name
+        },
+      });
+
+      return {
+        id: response.data.id,
+        name: response.data.name,
+        webViewLink: response.data.webViewLink,
+      };
+    } catch (error) {
+      Logger.error('Failed to copy Google Form:', error);
+      throw error;
+    }
+  }
 }

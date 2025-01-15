@@ -227,15 +227,27 @@ export class FormsService {
       const forms = await this.getForms(formIds);
       const allRequests = this.createItemRequests(forms);
 
-      const newForm = await this.createForm({
-        documentTitle: newDocumentTitle,
-        formTitle: newFormTitle,
-      });
+      const emptyTemplateFormId =
+        '1AVVAOVjjZBWXaOlYSFAVXxs8OpCoNVrJ9Dq0oSEvuVA';
+      const formCopy = await this.driveService.copyForm(
+        emptyTemplateFormId,
+        newDocumentTitle,
+      );
 
       const createResponse = await this.formClient.forms.batchUpdate({
-        formId: newForm.formId,
+        formId: formCopy.id,
         requestBody: {
-          requests: allRequests,
+          requests: [
+            {
+              updateFormInfo: {
+                info: {
+                  title: newFormTitle,
+                },
+                updateMask: 'title',
+              },
+            },
+            ...allRequests,
+          ],
           includeFormInResponse: true,
         },
       });
@@ -245,14 +257,14 @@ export class FormsService {
 
       if (navigationUpdates.length > 0) {
         await this.formClient.forms.batchUpdate({
-          formId: newForm.formId,
+          formId: formCopy.id,
           requestBody: {
             requests: navigationUpdates,
           },
         });
       }
 
-      return newForm;
+      return formCopy;
     } catch (error) {
       Logger.error('Failed to merge forms:', error);
       throw error;
