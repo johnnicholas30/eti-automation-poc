@@ -7,6 +7,7 @@ import {
   MergeFormsInterface,
   GoogleFormMapping,
 } from '@/forms/interfaces/form.interface';
+import { EMPTY_TEMPLATE_FORM_ID, INTRO_FORM } from '@/utils/constant';
 
 @Injectable()
 export class FormsService {
@@ -57,18 +58,16 @@ export class FormsService {
   }
 
   private async getForms(formIds: string[]) {
-    const INTRO_FORM_ID = '13LE8e3p_PPel6otrvtDHxHF6me0DMhfAxEoTfZAx4JQ';
-    const [introForm, ...rawForms] = await Promise.all([
-      this.getFormDetails(INTRO_FORM_ID),
-      ...formIds.map((id) => this.getFormDetails(id)),
-    ]);
+    const rawForms = await Promise.all(
+      formIds.map((id) => this.getFormDetails(id)),
+    );
 
     const formsWithoutIntro = rawForms.map((form) => ({
       ...form,
       items: form.items.slice(4),
     }));
 
-    return [introForm, ...formsWithoutIntro];
+    return [INTRO_FORM, ...formsWithoutIntro];
   }
 
   private cleanFormItem(item: forms_v1.Schema$Item) {
@@ -227,10 +226,8 @@ export class FormsService {
       const forms = await this.getForms(formIds);
       const allRequests = this.createItemRequests(forms);
 
-      const emptyTemplateFormId =
-        '1AVVAOVjjZBWXaOlYSFAVXxs8OpCoNVrJ9Dq0oSEvuVA';
       const formCopy = await this.driveService.copyForm(
-        emptyTemplateFormId,
+        EMPTY_TEMPLATE_FORM_ID,
         newDocumentTitle,
       );
 
